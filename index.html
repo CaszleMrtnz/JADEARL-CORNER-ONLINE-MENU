@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadearl Corner MENU online</title>
+    <style>
+        /* Forest and Chill Vibes Colors */
+        :root {
+            --bg-color: #1a2b22; /* Dark forest green */
+            --card-bg: #283d30; /* Lighter muted green */
+            --primary: #8fd19e; /* Soft mint green */
+            --danger: #e07a5f; /* Soft red/orange */
+            --text-light: #e8f0ea; /* Off-white */
+            --text-muted: #a3b8aa;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-light); padding-bottom: 100px; }
+
+        header {
+            background-color: #132019; padding: 20px; text-align: center; border-bottom: 3px solid var(--primary);
+            position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center;
+        }
+
+        header h1 { color: var(--primary); text-transform: uppercase; font-size: 24px; letter-spacing: 2px; }
+
+        .cart-btn {
+            background-color: var(--primary); color: #132019; border: none; padding: 10px 20px;
+            font-size: 18px; font-weight: bold; cursor: pointer; border-radius: 8px;
+        }
+
+        .menu-container {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px; padding: 20px; max-width: 1200px; margin: 0 auto;
+        }
+
+        .product-card {
+            background-color: var(--card-bg); border: 1px solid #3a5444; border-radius: 12px;
+            overflow: hidden; text-align: center; position: relative; cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .product-card img { width: 100%; height: 200px; object-fit: cover; }
+        .product-info { padding: 15px; }
+        .product-title { font-size: 22px; font-weight: bold; margin-bottom: 10px; }
+        .product-price { color: var(--primary); font-size: 20px; font-weight: bold; }
+
+        .sold-out-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(26, 43, 34, 0.85); display: flex; justify-content: center;
+            align-items: center; color: var(--danger); font-size: 30px; font-weight: bold; z-index: 10;
+        }
+
+        /* Modals */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); z-index: 200; justify-content: center; align-items: center; padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--card-bg); padding: 30px; border-radius: 12px;
+            width: 100%; max-width: 500px; border: 2px solid var(--primary);
+            max-height: 90vh; overflow-y: auto;
+        }
+
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 16px; color: var(--primary); }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 12px; font-size: 16px; border-radius: 8px;
+            border: 1px solid #3a5444; background: #1a2b22; color: white; margin-bottom: 10px;
+        }
+
+        .big-btn {
+            width: 100%; padding: 15px; font-size: 18px; font-weight: bold;
+            border: none; border-radius: 8px; cursor: pointer; margin-top: 10px;
+        }
+
+        .btn-add { background: var(--primary); color: #132019; }
+        .btn-close { background: #3a5444; color: white; }
+        
+        /* Admin Panel Styles */
+        #admin-section { display: none; background: #132019; height: 100vh; position: fixed; top:0; left:0; width: 100%; z-index: 300; }
+        
+        .admin-layout { display: flex; height: 100%; }
+        
+        .admin-sidebar {
+            width: 200px; background: #1a2b22; padding: 20px; border-right: 3px solid var(--primary);
+            display: flex; flex-direction: column; gap: 15px;
+        }
+        .admin-sidebar button {
+            background: var(--card-bg); color: white; border: none; padding: 15px; text-align: left;
+            font-size: 16px; cursor: pointer; border-radius: 8px; font-weight: bold;
+            position: relative;
+        }
+        .admin-sidebar button:hover { background: var(--primary); color: #132019; }
+        
+        .admin-content-area { flex: 1; padding: 30px; overflow-y: auto; }
+        .admin-tab { display: none; }
+        .admin-tab.active { display: block; }
+
+        .admin-card { background: var(--card-bg); padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--primary); border-radius: 8px; }
+        
+        .admin-login-trigger { text-align: center; padding: 20px; color: var(--text-muted); cursor: pointer; font-size: 12px; }
+        .receipt-box { background: #e8f0ea; color: #132019; padding: 20px; font-family: monospace; margin-bottom: 20px; border-radius: 8px; }
+
+        /* Inbox Order Card */
+        .order-card { background: var(--card-bg); border: 1px solid var(--primary); padding: 15px; margin-bottom: 15px; border-radius: 8px; transition: 0.3s; }
+        .order-card h4 { color: var(--primary); margin-bottom: 5px; }
+        
+        .small-btn { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 5px; }
+
+        /* Notification Badge Style */
+        .badge {
+            background: red;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 7px;
+            font-size: 12px;
+            margin-left: 5px;
+            display: none;
+            position: absolute;
+            right: 10px;
+        }
+
+        /* Best Seller Bar */
+        .bar-container { background: #1a2b22; width: 100%; height: 20px; border-radius: 10px; overflow: hidden; margin-top: 5px; border: 1px solid #3a5444; }
+        .bar-fill { background: var(--primary); height: 100%; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>JADEARL CORNER</h1>
+        <button type="button" class="cart-btn" onclick="openCart()">🛒 Cart (<span id="cart-count">0</span>)</button>
+    </header>
+
+    <div class="menu-container" id="menu-container"></div>
+
+    <!-- Product Selection Modal -->
+    <div class="modal" id="product-modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Product</h2>
+            <div class="form-group" id="flavor-group">
+                <label>Select Flavor:</label>
+                <select id="modal-flavor"></select>
+            </div>
+            <div class="form-group">
+                <label>Quantity:</label>
+                <input type="number" id="modal-qty" value="1" min="1" onchange="updateModalPrice()">
+            </div>
+            <h3 id="modal-price" class="product-price">₱0</h3>
+            <button type="button" class="big-btn btn-add" onclick="addToCart()">Add to Cart</button>
+            <button type="button" class="big-btn btn-close" onclick="closeModal('product-modal')">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div class="modal" id="cart-modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 10px; color: var(--primary);">Your Order</h2>
+            <div id="cart-items-list" style="margin-bottom: 15px;"></div>
+            <div class="product-price" style="margin-bottom: 15px;">Total: ₱<span id="cart-total">0</span></div>
+            <div class="form-group">
+                <input type="text" id="cust-name" placeholder="Your Name">
+                <input type="text" id="cust-address" placeholder="Delivery Address">
+                <textarea id="cust-concern" placeholder="Any special concerns or additionals? (Optional)" rows="3"></textarea>
+            </div>
+            <button type="button" class="big-btn btn-add" onclick="processCheckout()">Place Order</button>
+            <button type="button" class="big-btn btn-close" onclick="closeModal('cart-modal')">Close</button>
+        </div>
+    </div>
+
+    <!-- Final Receipt -->
+    <div class="modal" id="receipt-modal">
+        <div class="modal-content">
+            <h2 style="color: var(--primary);">Order Sent!</h2>
+            <div class="receipt-box" id="receipt-content"></div>
+            <p style="color:var(--danger); font-weight:bold; text-align:center;">PLEASE SEND SCREENSHOT IN PRIVATE MESSAGE IN MESSENGER TO CONFIRM YOUR ORDER.</p>
+            <button type="button" class="big-btn btn-close" onclick="closeReceipt()">Done</button>
+        </div>
+    </div>
+
+    <!-- Admin Section -->
+    <div id="admin-section">
+        <div class="admin-layout">
+            <!-- Admin Menu on Left Side -->
+            <div class="admin-sidebar">
+                <h3 style="color: var(--primary); text-align: center; margin-bottom: 20px;">Admin Panel</h3>
+                <button type="button" onclick="switchAdminTab('tab-products')">🍔 Products</button>
+                <button type="button" onclick="switchAdminTab('tab-inbox')">📥 Inbox <span id="inbox-badge" class="badge">0</span></button>
+                <button type="button" onclick="switchAdminTab('tab-money')">💰 Earnings</button>
+                <button type="button" style="background: var(--danger); margin-top: auto;" onclick="adminLogout()">Logout</button>
+            </div>
+
+            <!-- Admin Content -->
+            <div class="admin-content-area">
+                
+                <!-- Products Tab -->
+                <div id="tab-products" class="admin-tab active">
+                    <h2 style="color:var(--primary); margin-bottom:20px;">Manage Products</h2>
+                    <div id="admin-product-list"></div>
+                    
+                    <h3 style="margin-top:30px; color:var(--primary);">Add / Edit Product</h3>
+                    <div class="form-group">
+                        <input type="hidden" id="edit-id">
+                        <label>Food Name:</label>
+                        <input type="text" id="new-name" placeholder="e.g. Siopao">
+                        <label>Price (₱):</label>
+                        <input type="number" id="new-price" placeholder="e.g. 15">
+                        <label>Flavors (separate by comma):</label>
+                        <input type="text" id="new-flavors" placeholder="e.g. Asado, Bola-Bola">
+                        
+                        <label>Upload Image from Files:</label>
+                        <input type="file" id="new-img-file" accept="image/*">
+                        
+                        <button type="button" class="big-btn btn-add" id="save-btn" onclick="saveProduct()">Save Product</button>
+                        <button type="button" class="big-btn btn-close" onclick="clearAdminForm()">Clear Form</button>
+                    </div>
+                </div>
+
+                <!-- Inbox Tab -->
+                <div id="tab-inbox" class="admin-tab">
+                    <h2 style="color:var(--primary); margin-bottom:20px;">Customer Orders</h2>
+                    <div id="admin-inbox-list"></div>
+                    <button type="button" class="big-btn btn-close" onclick="clearInbox()">Clear All Orders</button>
+                </div>
+
+                <!-- Monetize Tab -->
+                <div id="tab-money" class="admin-tab">
+                    <h2 style="color:var(--primary); margin-bottom:20px;">Total Earnings</h2>
+                    <div class="admin-card" style="font-size: 30px; justify-content: center; padding: 50px;">
+                        ₱<span id="total-earnings-display">0</span>
+                    </div>
+                    
+                    <!-- Added Best Sellers Graph Section -->
+                    <h2 style="color:var(--primary); margin-top:30px; margin-bottom:15px;">Best Selling Products</h2>
+                    <div class="admin-card" style="display: block;">
+                        <div id="best-sellers-list"></div>
+                    </div>
+
+                    <button type="button" class="big-btn btn-add" style="background: var(--danger); margin-top:20px;" onclick="resetEarnings()">Reset Earnings to Zero</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden text to click to login -->
+    <div class="admin-login-trigger" onclick="adminLogin()">Admin Login</div>
+
+    <script>
+        // 1. Load data from LocalStorage (so it doesn't disappear)
+        let products = JSON.parse(localStorage.getItem('myProducts')) || [
+            { id: 1, name: 'Siopao', price: 15, flavors: ['Asado', 'Bola-Bola'], soldOut: false, img: 'https://placehold.co/400x300/283d30/8fd19e?text=SIOPAO' },
+            { id: 2, name: 'Burger', price: 30, flavors: ['Cheese', 'Egg'], soldOut: false, img: 'https://placehold.co/400x300/283d30/8fd19e?text=BURGER' },
+            { id: 3, name: 'Mango Float', price: 15, flavors: ['Classic'], soldOut: false, img: 'https://placehold.co/400x300/283d30/8fd19e?text=MANGO+FLOAT' }
+        ];
+        
+        let orders = JSON.parse(localStorage.getItem('myOrders')) || [];
+        let totalEarnings = parseInt(localStorage.getItem('myEarnings')) || 0;
+        let unreadOrders = parseInt(localStorage.getItem('myUnread')) || 0; 
+        let cart = [];
+        let currentProduct = null;
+        let uploadedImage = ""; 
+
+        // Function to save everything to the browser
+        function saveData() {
+            localStorage.setItem('myProducts', JSON.stringify(products));
+            localStorage.setItem('myOrders', JSON.stringify(orders));
+            localStorage.setItem('myEarnings', totalEarnings);
+            localStorage.setItem('myUnread', unreadOrders); 
+        }
+
+        // --- MENU & CART FUNCTIONS ---
+        function renderMenu() {
+            const container = document.getElementById('menu-container');
+            let html = '';
+            products.forEach(p => {
+                html += `
+                    <div class="product-card" onclick="openProduct(${p.id})">
+                        ${p.soldOut ? '<div class="sold-out-overlay">Sold Out</div>' : ''}
+                        <img src="${p.img}">
+                        <div class="product-info">
+                            <div class="product-title">${p.name}</div>
+                            <div class="product-price">₱${p.price}</div>
+                        </div>
+                    </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function openProduct(id) {
+            currentProduct = products.find(p => p.id === id);
+            if(currentProduct.soldOut) return;
+            document.getElementById('modal-title').innerText = currentProduct.name;
+            const flavSelect = document.getElementById('modal-flavor');
+            flavSelect.innerHTML = '';
+            currentProduct.flavors.forEach(f => flavSelect.innerHTML += `<option value="${f.trim()}">${f.trim()}</option>`);
+            updateModalPrice();
+            document.getElementById('product-modal').style.display = 'flex';
+        }
+
+        function updateModalPrice() {
+            const qty = document.getElementById('modal-qty').value;
+            document.getElementById('modal-price').innerText = `Total: ₱${currentProduct.price * qty}`;
+        }
+
+        function addToCart() {
+            const qty = parseInt(document.getElementById('modal-qty').value);
+            const flavor = document.getElementById('modal-flavor').value;
+            cart.push({ name: currentProduct.name, price: currentProduct.price, qty, flavor, total: currentProduct.price * qty });
+            document.getElementById('cart-count').innerText = cart.length;
+            closeModal('product-modal');
+        }
+
+        function openCart() {
+            const list = document.getElementById('cart-items-list');
+            let html = '';
+            let total = 0;
+            cart.forEach(item => {
+                total += item.total;
+                html += `<div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span>${item.qty}x ${item.name} (${item.flavor})</span>
+                    <span>₱${item.total}</span>
+                </div>`;
+            });
+            list.innerHTML = html;
+            document.getElementById('cart-total').innerText = total;
+            document.getElementById('cart-modal').style.display = 'flex';
+        }
+
+        function processCheckout() {
+            if(cart.length === 0) return alert("Your cart is empty!");
+            const name = document.getElementById('cust-name').value;
+            const addr = document.getElementById('cust-address').value;
+            const concern = document.getElementById('cust-concern').value; 
+            
+            if(!name || !addr) return alert("Please enter your name and address");
+            
+            let grandTotal = 0;
+            let receiptText = `NAME: ${name}<br>ADDR: ${addr}<br>`;
+            if(concern) receiptText += `CONCERN: ${concern}<br>`;
+            receiptText += `<hr>`;
+            
+            let emailItems = [];
+
+            cart.forEach(i => {
+                receiptText += `${i.qty}x ${i.name} (${i.flavor}) - ₱${i.total}<br>`;
+                emailItems.push(`${i.qty}x ${i.name} (${i.flavor})`);
+                grandTotal += i.total;
+            });
+            receiptText += `<hr>TOTAL: ₱${grandTotal}`;
+            
+            // Save to Inbox
+            const newOrder = {
+                date: new Date().toLocaleString(),
+                customer: name,
+                address: addr,
+                concern: concern, 
+                items: cart,
+                total: grandTotal,
+                finished: false,  
+                paid: false,      
+                mop: 'Pending'    
+            };
+            orders.push(newOrder);
+            
+            totalEarnings += grandTotal;
+            unreadOrders += 1; 
+            
+            saveData(); 
+            updateBadge(); 
+
+            // --- Send Email Automatically via FormSubmit ---
+            fetch("https://formsubmit.co/ajax/caszlemartinez2001@gmail.com", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    _subject: "New Order from " + name + "!",
+                    Customer_Name: name,
+                    Delivery_Address: addr,
+                    Special_Concerns: concern || "None", 
+                    Order_Items: emailItems.join(', '),
+                    Total_Amount: "₱" + grandTotal
+                })
+            }).catch(error => console.log("Email error:", error));
+            // -----------------------------------------------
+
+            // Show Receipt
+            document.getElementById('receipt-content').innerHTML = receiptText;
+            closeModal('cart-modal');
+            document.getElementById('receipt-modal').style.display = 'flex';
+            cart = []; // clear cart
+            
+            document.getElementById('cust-name').value = '';
+            document.getElementById('cust-address').value = '';
+            document.getElementById('cust-concern').value = '';
+            document.getElementById('cart-count').innerText = "0";
+        }
+
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        function closeReceipt() {
+            document.getElementById('receipt-modal').style.display = 'none';
+        }
+
+        // --- ADMIN FUNCTIONS ---
+        function adminLogin() {
+            const user = prompt("Username:");
+            const pass = prompt("Password:");
+            if(user === "caszle" && pass === "mom123") {
+                document.getElementById('admin-section').style.display = 'block';
+                document.body.style.overflow = "hidden"; 
+                renderAdminList();
+                renderInbox();
+                renderEarnings();
+                renderBestSellers(); 
+                updateBadge();
+            } else { alert("Wrong credentials"); }
+        }
+
+        function adminLogout() {
+            document.getElementById('admin-section').style.display = 'none';
+            document.body.style.overflow = "auto"; 
+        }
+
+        function switchAdminTab(tabId) {
+            document.querySelectorAll('.admin-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            if(tabId === 'tab-inbox') {
+                unreadOrders = 0;
+                saveData();
+                updateBadge();
+            }
+            if(tabId === 'tab-money') {
+                renderBestSellers(); 
+            }
+        }
+
+        function updateBadge() {
+            const badge = document.getElementById('inbox-badge');
+            if(unreadOrders > 0) {
+                badge.innerText = unreadOrders;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function renderAdminList() {
+            const list = document.getElementById('admin-product-list');
+            let html = '';
+            products.forEach(p => {
+                html += `
+                    <div class="admin-card">
+                        <div>
+                            <strong>${p.name}</strong> - ₱${p.price}<br>
+                            <small style="color:var(--text-muted)">${p.soldOut ? '🔴 SOLD OUT' : '🟢 Available'}</small>
+                        </div>
+                        <div>
+                            <button type="button" class="small-btn" style="background:#555; color:white;" onclick="editProduct(${p.id})">Edit</button>
+                            <button type="button" class="small-btn" style="background:var(--primary);" onclick="toggleSoldOut(${p.id})">Sold Out</button>
+                            <button type="button" class="small-btn" style="background:var(--danger); color:white;" onclick="deleteProduct(${p.id})">Delete</button>
+                        </div>
+                    </div>`;
+            });
+            list.innerHTML = html;
+        }
+
+        function toggleSoldOut(id) {
+            const p = products.find(prod => prod.id === id);
+            p.soldOut = !p.soldOut;
+            saveData(); renderAdminList(); renderMenu();
+        }
+
+        function deleteProduct(id) {
+            if(confirm("Are you sure you want to delete this product?")) {
+                products = products.filter(p => p.id !== id);
+                saveData(); renderAdminList(); renderMenu();
+            }
+        }
+
+        function editProduct(id) {
+            const p = products.find(prod => prod.id === id);
+            document.getElementById('edit-id').value = p.id;
+            document.getElementById('new-name').value = p.name;
+            document.getElementById('new-price').value = p.price;
+            document.getElementById('new-flavors').value = p.flavors.join(', ');
+            document.getElementById('save-btn').innerText = "Update Product";
+            uploadedImage = p.img; 
+        }
+
+        function clearAdminForm() {
+            document.getElementById('edit-id').value = "";
+            document.getElementById('new-name').value = "";
+            document.getElementById('new-price').value = "";
+            document.getElementById('new-flavors').value = "";
+            document.getElementById('new-img-file').value = "";
+            document.getElementById('save-btn').innerText = "Save New Product";
+            uploadedImage = "";
+        }
+
+        document.getElementById('new-img-file').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImage = e.target.result; 
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function saveProduct() {
+            const id = document.getElementById('edit-id').value;
+            const name = document.getElementById('new-name').value;
+            const price = parseInt(document.getElementById('new-price').value);
+            const flavors = document.getElementById('new-flavors').value.split(',');
+            
+            if(!name || !price) return alert("Please enter name and price.");
+
+            const finalImage = uploadedImage || 'https://placehold.co/400x300/283d30/8fd19e?text=NEW+FOOD';
+
+            if(id) {
+                const index = products.findIndex(p => p.id == id);
+                products[index].name = name;
+                products[index].price = price;
+                products[index].flavors = flavors;
+                products[index].img = finalImage;
+                alert("Product Updated!");
+            } else {
+                products.push({ id: Date.now(), name, price, flavors, soldOut: false, img: finalImage });
+                alert("New Product Added!");
+            }
+            
+            saveData();
+            renderAdminList();
+            renderMenu();
+            clearAdminForm();
+        }
+
+        // --- INBOX FUNCTIONS ---
+        function renderInbox() {
+            const list = document.getElementById('admin-inbox-list');
+            if(orders.length === 0) {
+                list.innerHTML = "<p>No orders yet.</p>";
+                return;
+            }
+            
+            let html = '';
+            let reversedOrders = orders.slice().reverse();
+            
+            reversedOrders.forEach((o, reversedIndex) => {
+                let realIndex = orders.length - 1 - reversedIndex; 
+                let itemsList = "";
+                o.items.forEach(i => itemsList += `${i.qty}x ${i.name} (${i.flavor})<br>`);
+                
+                let opacityStyle = o.finished ? 'opacity: 0.6;' : 'opacity: 1;';
+                
+                html += `
+                    <div class="order-card" style="${opacityStyle}">
+                        <h4>Order from: ${o.customer}</h4>
+                        <p><strong>Date:</strong> ${o.date}</p>
+                        <p><strong>Address:</strong> ${o.address}</p>
+                        ${o.concern ? `<p><strong>Concern:</strong> <span style="color:var(--danger)">${o.concern}</span></p>` : ''}
+                        <hr style="margin: 10px 0; border: 1px solid #3a5444;">
+                        <p>${itemsList}</p>
+                        <h3 style="color:var(--primary); margin-top:10px;">Total: ₱${o.total}</h3>
+                        
+                        <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #3a5444; display:flex; align-items:center; flex-wrap:wrap; gap:15px;">
+                            <label style="cursor:pointer; display:flex; align-items:center; gap:5px;">
+                                <input type="checkbox" onchange="updateOrder(${realIndex}, 'finished', this.checked)" ${o.finished ? 'checked' : ''} style="width:18px; height:18px;">
+                                Mark Finish
+                            </label>
+                            
+                            <label style="cursor:pointer; display:flex; align-items:center; gap:5px;">
+                                <input type="checkbox" onchange="updateOrder(${realIndex}, 'paid', this.checked)" ${o.paid ? 'checked' : ''} style="width:18px; height:18px;">
+                                Already Paid
+                            </label>
+                            
+                            <select style="padding: 6px; border-radius: 5px; background: #1a2b22; color: white; border: 1px solid var(--primary);" onchange="updateOrder(${realIndex}, 'mop', this.value)">
+                                <option value="Pending" ${!o.mop || o.mop === 'Pending' ? 'selected' : ''}>Mode of Payment...</option>
+                                <option value="Cash on Delivery" ${o.mop === 'Cash on Delivery' ? 'selected' : ''}>Cash on Delivery</option>
+                                <option value="Maya" ${o.mop === 'Maya' ? 'selected' : ''}>Maya</option>
+                                <option value="Bank Transfer" ${o.mop === 'Bank Transfer' ? 'selected' : ''}>Bank Transfer</option>
+                            </select>
+                        </div>
+                    </div>`;
+            });
+            list.innerHTML = html;
+        }
+
+        function updateOrder(index, field, value) {
+            orders[index][field] = value;
+            saveData();
+            renderInbox(); 
+        }
+
+        function clearInbox() {
+            if(confirm("Are you sure you want to delete all orders from the inbox?")) {
+                orders = [];
+                saveData();
+                renderInbox();
+                renderBestSellers();
+            }
+        }
+
+        // --- EARNINGS & BEST SELLERS FUNCTIONS ---
+        function renderEarnings() {
+            document.getElementById('total-earnings-display').innerText = totalEarnings;
+        }
+        
+        function renderBestSellers() {
+            const container = document.getElementById('best-sellers-list');
+            let salesCount = {};
+            
+            orders.forEach(order => {
+                order.items.forEach(item => {
+                    if(!salesCount[item.name]) {
+                        salesCount[item.name] = 0;
+                    }
+                    salesCount[item.name] += item.qty;
+                });
+            });
+            
+            let sortedItems = Object.keys(salesCount).map(name => {
+                return { name: name, qty: salesCount[name] };
+            }).sort((a, b) => b.qty - a.qty);
+            
+            if(sortedItems.length === 0) {
+                container.innerHTML = "<p style='color:var(--text-muted);'>No items sold yet.</p>";
+                return;
+            }
+            
+            let topNumber = sortedItems[0].qty; 
+            let html = '';
+            
+            sortedItems.forEach(item => {
+                let barWidth = (item.qty / topNumber) * 100;
+                html += `
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px;">
+                            <span>${item.name}</span>
+                            <span style="color:var(--primary);">${item.qty} Sold</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: ${barWidth}%;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function resetEarnings() {
+            if(confirm("Are you sure you want to reset your money count to 0?")) {
+                totalEarnings = 0;
+                saveData();
+                renderEarnings();
+            }
+        }
+
+        // Start the app
+        updateBadge();
+        renderMenu();
+    </script>
+</body>
+</html>
